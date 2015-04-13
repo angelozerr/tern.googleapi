@@ -13,9 +13,10 @@ public class GMethod {
 	private final boolean constructor;
 	private final List<GParameter> parameters;
 	private final boolean staticMethod;
+	private final String url;
 
 	public GMethod(String signature, String description, String returnValue,
-			boolean constructor, boolean staticMethod) {
+			boolean constructor, boolean staticMethod, GClass ownerClass) {
 		this.description = description;
 		this.returnValue = returnValue;
 		this.constructor = constructor;
@@ -23,6 +24,7 @@ public class GMethod {
 		this.parameters = new ArrayList<GParameter>();
 		// signature = Map(mapDiv:Node, opts?:MapOptions)
 		this.name = parseSignature(signature, parameters);
+		this.url = ownerClass != null ? ownerClass.getUrl() : null;
 	}
 
 	private String parseSignature(String signature, List<GParameter> parameters) {
@@ -119,5 +121,9 @@ public class GMethod {
 		for (GParameter parameter : parameters) {
 			parameter.updateType(api);
 		}
+	}
+
+	public String getUrl() {
+		return url;
 	}
 }

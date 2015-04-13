@@ -18,6 +18,7 @@ public class GApiContentHandler extends DefaultHandler {
 	private final GApi api;
 	private GClass currentClass;
 	private StringBuilder h2Content;
+	private StringBuilder pClassDescription;
 	private SuperClassState superClassState = SuperClassState.NO_TRACK;
 	private StringBuilder superclass;
 	private boolean classParsing;
@@ -27,8 +28,8 @@ public class GApiContentHandler extends DefaultHandler {
 	private StringBuilder tdContent;
 	private List<String> cells;
 
-	public GApiContentHandler(String name, String version) {
-		this.api = new GApi(name, version);
+	public GApiContentHandler(String name, String version, String baseUrl) {
+		this.api = new GApi(name, version, baseUrl);
 		this.h2Content = null;
 		this.classParsing = false;
 	}
@@ -67,6 +68,10 @@ public class GApiContentHandler extends DefaultHandler {
 			if (tableParsing) {
 				this.tdContent = new StringBuilder();
 			}
+		} else if ("p".equalsIgnoreCase(localName)) {
+			if (currentClass != null && currentClass.getDescription() == null) {
+				this.pClassDescription = new StringBuilder();
+			}
 		}
 		super.startElement(uri, localName, name, attributes);
 	}
@@ -85,7 +90,9 @@ public class GApiContentHandler extends DefaultHandler {
 					// <h2
 					// id="MapTypeControlOptions">google.maps.MapTypeControlOptions
 					// object specification</h2>
-					currentClass = api.addClass(className);
+					boolean objectLiteral = h2Content.toString().indexOf(
+							"object specification") != -1;
+					currentClass = api.addClass(className, objectLiteral);
 					superClassState = SuperClassState.TRACK_THIS_CLASS_EXTENDS;
 				}
 			}
@@ -100,7 +107,7 @@ public class GApiContentHandler extends DefaultHandler {
 					String type = cells.get(0);
 					String description = cells.get(1);
 					GMethod method = new GMethod(type, description, null, true,
-							false);
+							false, currentClass);
 					currentClass.addMethod(method);
 				} else if ("Methods".equalsIgnoreCase(tableType)
 						&& cells.size() == 3) {
@@ -108,7 +115,7 @@ public class GApiContentHandler extends DefaultHandler {
 					String returnValue = cells.get(1);
 					String description = cells.get(2);
 					GMethod method = new GMethod(siganture, description,
-							returnValue, false, false);
+							returnValue, false, false, currentClass);
 					currentClass.addMethod(method);
 				} else if ("Static Methods".equalsIgnoreCase(tableType)
 						&& cells.size() == 3) {
@@ -116,8 +123,16 @@ public class GApiContentHandler extends DefaultHandler {
 					String returnValue = cells.get(1);
 					String description = cells.get(2);
 					GMethod method = new GMethod(type, description,
-							returnValue, false, true);
+							returnValue, false, true, currentClass);
 					currentClass.addMethod(method);
+				} else if ("Properties".equalsIgnoreCase(tableType)
+						&& cells.size() == 3) {
+					String name = cells.get(0);
+					String type = cells.get(1);
+					String description = cells.get(2);
+					GProperty property = new GProperty(name, type, description,
+							currentClass);
+					currentClass.addProperty(property);
 				}
 			}
 			this.cells = null;
@@ -126,6 +141,13 @@ public class GApiContentHandler extends DefaultHandler {
 				cells.add(tdContent.toString());
 			}
 			this.tdContent = null;
+		} else if ("p".equalsIgnoreCase(localName)) {
+			if (currentClass != null && currentClass.getDescription() == null) {
+				currentClass
+						.setDescription(pClassDescription != null ? pClassDescription
+								.toString() : "");
+				pClassDescription = null;
+			}
 		}
 		super.endElement(uri, localName, qName);
 	}
@@ -139,6 +161,8 @@ public class GApiContentHandler extends DefaultHandler {
 			h3Content.append(ch, start, length);
 		} else if (tdContent != null) {
 			tdContent.append(ch, start, length);
+		} else if (pClassDescription != null) {
+			pClassDescription.append(ch, start, length);
 		}
 		switch (superClassState) {
 		case TRACK_THIS_CLASS_EXTENDS:

@@ -14,7 +14,7 @@ public class GenerateXMLApiForGMaps2 {
 		InputSource in = new InputSource(
 				GenerateXMLApiForGMaps2.class.getResourceAsStream("api2.html"));
 
-		GApi api = GApiHelper.load(in, "gmaps", "2");
+		GApi api = GApiHelper.load(in, "gmaps", "2", null);
 		GApiHelper.visit(api, new XMLGApiHandler(System.out));
 
 	}

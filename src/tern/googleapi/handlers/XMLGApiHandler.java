@@ -5,6 +5,7 @@ import java.io.OutputStream;
 
 import tern.googleapi.GMethod;
 import tern.googleapi.GParameter;
+import tern.googleapi.GProperty;
 import tern.googleapi.utils.StringUtils;
 
 //http://www.openajax.org/member/wiki/IDE_API_Sample_Google_Map
@@ -28,7 +29,9 @@ public class XMLGApiHandler extends AbstractGApiHandler {
 	}
 
 	@Override
-	public void startClass(String name, String superclass) throws IOException {
+	public void startClass(String name, String superclass,
+			boolean objectLiteral, String description, String url)
+			throws IOException {
 		startElement("class");
 		setAttribute("type", name);
 		if (!StringUtils.isEmpty(superclass)) {
@@ -75,6 +78,11 @@ public class XMLGApiHandler extends AbstractGApiHandler {
 	}
 
 	@Override
+	public void handleProperty(GProperty property) throws IOException {
+
+	}
+
+	@Override
 	public void handleMethod(GMethod method) throws IOException {
 		if (method.isConstructor()) {
 			startElement("constructors", true);
@@ -88,7 +96,7 @@ public class XMLGApiHandler extends AbstractGApiHandler {
 						startElement("parameter");
 						setAttribute("name", parameter.getName());
 						setAttribute("required", !parameter.isOptional());
-						//setAttribute("type", parameter.getType());
+						// setAttribute("type", parameter.getType());
 						write(">");
 						endElement("parameter");
 					}

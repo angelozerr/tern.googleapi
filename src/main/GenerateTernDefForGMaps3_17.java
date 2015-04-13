@@ -21,7 +21,7 @@ public class GenerateTernDefForGMaps3_17 {
 				GenerateTernDefForGMaps3_17.class
 						.getResourceAsStream("api3.17.html"));
 
-		GApi api = GApiHelper.load(in, "gmaps", "3.17");
+		GApi api = GApiHelper.load(in, "gmaps", "3.17", null);
 		GApiHelper.visit(api, new TernDefGApiHandler(System.out));
 	}
 }

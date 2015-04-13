@@ -2,11 +2,13 @@ package tern.googleapi.handlers;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.util.List;
 
 import tern.googleapi.FunctionType;
 import tern.googleapi.GMethod;
 import tern.googleapi.GParameter;
+import tern.googleapi.GProperty;
 import tern.googleapi.IType;
 import tern.googleapi.SimpleType;
 import tern.googleapi.utils.StringUtils;
@@ -18,15 +20,23 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 
 	private final JsonObject def;
 	private JsonObject ternClass;
+	private JsonObject define;
 
 	public TernDefGApiHandler(OutputStream out) {
 		super(out);
 		this.def = new JsonObject();
 	}
 
+	public TernDefGApiHandler(Writer writer) {
+		super(writer);
+		this.def = new JsonObject();
+	}
+
 	@Override
 	public void startApi(String name, String version) throws IOException {
-		def.set("!name", name);
+		def.set("!name", name + version);
+		this.define = new JsonObject();
+		def.set("!define", define);
 	}
 
 	@Override
@@ -35,11 +45,32 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 	}
 
 	@Override
-	public void startClass(String name, String superclass) throws IOException {
+	public void startClass(String name, String superclass,
+			boolean objectLiteral, String description, String url)
+			throws IOException {
 		this.ternClass = getTernClass(name, def);
-		if (superclass != null) {
+		if (!StringUtils.isEmpty(superclass)) {
 			ternClass.set("!proto", superclass);
 		}
+		addDocAndUrl(ternClass, description, url);
+	}
+
+	protected void addDocAndUrl(JsonObject ternDef, String doc, String url) {
+		if (!StringUtils.isEmpty(doc)) {
+			ternDef.set("!doc", doc);
+		}
+		if (!StringUtils.isEmpty(url)) {
+			ternDef.set("!url", url);
+		}
+	}
+
+	@Override
+	public void handleProperty(GProperty property) throws IOException {
+		JsonObject jsonProperty = getTernClassOrPrototype(ternClass, property);
+		jsonProperty.set("!type", getType(property.getType(), false));
+		String doc = property.getDescription();
+		String url = property.getUrl();
+		addDocAndUrl(jsonProperty, doc, url);
 	}
 
 	@Override
@@ -49,10 +80,9 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 		if (!StringUtils.isEmpty(type)) {
 			ternItem.set("!type", type);
 		}
-		String description = method.getDescription();
-		if (!StringUtils.isEmpty(description)) {
-			ternItem.set("!doc", description);
-		}
+		String doc = method.getDescription();
+		String url = method.getUrl();
+		addDocAndUrl(ternItem, doc, url);
 	}
 
 	private String getType(GMethod method) {
@@ -120,6 +150,22 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 			type.append("]");
 		}
 		return type.toString();
+	}
+
+	private JsonObject getTernClassOrPrototype(JsonObject ternClass,
+			GProperty property) {
+		JsonObject ternClassOrPrototype = ternClass;
+		JsonObject jsonProperty = new JsonObject();
+		if (!property.isStatic()) {
+			JsonObject prototype = (JsonObject) ternClass.get("prototype");
+			if (prototype == null) {
+				prototype = new JsonObject();
+				ternClass.set("prototype", prototype);
+			}
+			ternClassOrPrototype = prototype;
+		}
+		ternClassOrPrototype.set(property.getName(), jsonProperty);
+		return jsonProperty;
 	}
 
 	private JsonObject getTernClassOrPrototype(JsonObject ternClass,

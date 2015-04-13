@@ -11,7 +11,7 @@ import tern.googleapi.handlers.IGApiHandler;
 
 public class GApiHelper {
 
-	public static GApi load(InputSource in, String name, String version)
+	public static GApi load(InputSource in, String name, String version, String baseUrl)
 			throws SAXException, IOException {
 		SAXParser saxReader = new SAXParser();
 		// set the feature like explained in documentation :
@@ -20,7 +20,7 @@ public class GApiHelper {
 				.setFeature(
 						"http://cyberneko.org/html/features/balance-tags/document-fragment",
 						true);
-		GApiContentHandler handler = new GApiContentHandler(name, version);
+		GApiContentHandler handler = new GApiContentHandler(name, version, baseUrl);
 		saxReader.setContentHandler(handler);
 		saxReader.parse(in);
 
@@ -33,7 +33,14 @@ public class GApiHelper {
 		List<GClass> classes = api.getClasses();
 		for (GClass clazz : classes) {
 			clazz.updateTypes(api);
-			visitor.startClass(clazz.getName(), clazz.getSuperclass());
+			visitor.startClass(clazz.getName(), clazz.getSuperclass(),
+					clazz.isObjectLiteral(), clazz.getDescription(), clazz.getUrl());
+			// Loop for methods
+			List<GProperty> properties = clazz.getProperties();
+			for (GProperty property : properties) {
+				property.updateType(api);
+				visitor.handleProperty(property);
+			}
 			// Loop for methods
 			List<GMethod> methods = clazz.getMethods();
 			for (GMethod method : methods) {

@@ -11,18 +11,27 @@ public class GApi {
 
 	private final String name;
 	private final String version;
+	private final String baseUrl;
 	private final List<GClass> classes;
 	private final Map<String, String> mappings;
 
-	public GApi(String name, String version) {
+	public GApi(String name, String version, String baseUrl) {
 		this.name = name;
 		this.version = version;
+		this.baseUrl = baseUrl;
 		this.classes = new ArrayList<GClass>();
 		this.mappings = new HashMap<String, String>();
 	}
 
 	public String getName() {
 		return name;
+	}
+
+	public static String getUrl(String baseUrl, String uri) {
+		if (baseUrl == null) {
+			return null;
+		}
+		return baseUrl + "#" + uri;
 	}
 
 	public String getVersion() {
@@ -33,8 +42,8 @@ public class GApi {
 		return classes;
 	}
 
-	public GClass addClass(String className) {
-		GClass clazz = new GClass(className);
+	public GClass addClass(String className, boolean objectLiteral) {
+		GClass clazz = new GClass(className, objectLiteral, baseUrl);
 		classes.add(clazz);
 		mappings.put(clazz.getSimpleName(), clazz.getName());
 		return clazz;
@@ -51,5 +60,9 @@ public class GApi {
 			return resolvedType;
 		}
 		return type;
+	}
+
+	public String getBaseUrl() {
+		return baseUrl;
 	}
 }

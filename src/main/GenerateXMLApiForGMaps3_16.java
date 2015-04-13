@@ -21,7 +21,7 @@ public class GenerateXMLApiForGMaps3_16 {
 				GenerateTernDefForGMaps3_17.class
 						.getResourceAsStream("api3.16.html"));
 
-		GApi api = GApiHelper.load(in, "gmaps", "3.16");
+		GApi api = GApiHelper.load(in, "gmaps", "3.16", null);
 		GApiHelper.visit(api, new XMLGApiHandler(System.out));
 
 	}

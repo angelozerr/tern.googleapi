@@ -2,21 +2,19 @@ package tern.googleapi.generator;
 
 public class TernPluginOptions {
 
-	private final String name;
-	private final String version;
+	private final String pluginName;
+	private final String defs;
 
-	public TernPluginOptions(String name, String version) {
-		this.name = name;
-		this.version = version;
+	public TernPluginOptions(String pluginName, String defs) {
+		this.pluginName = pluginName;
+		this.defs = defs;
 	}
 
-	public Object getPluginName() {
-		// TODO Auto-generated method stub
-		return null;
+	public String getPluginName() {
+		return pluginName;
 	}
 
-	public Object getDefName() {
-		// TODO Auto-generated method stub
-		return null;
+	public String getDefs() {
+		return defs;
 	}
 }
