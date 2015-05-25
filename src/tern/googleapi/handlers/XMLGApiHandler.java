@@ -29,7 +29,7 @@ public class XMLGApiHandler extends AbstractGApiHandler {
 	}
 
 	@Override
-	public void startClass(String name, String superclass,
+	public void startClass(String name, GMethod constructor, String superclass,
 			boolean objectLiteral, String description, String url)
 			throws IOException {
 		startElement("class");

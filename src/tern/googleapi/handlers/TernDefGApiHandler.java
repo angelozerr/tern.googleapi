@@ -14,6 +14,7 @@ import tern.googleapi.SimpleType;
 import tern.googleapi.utils.StringUtils;
 
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.WriterConfig;
 
 //http://www.openajax.org/member/wiki/IDE_API_Sample_Google_Map
 public class TernDefGApiHandler extends AbstractGApiHandler {
@@ -41,18 +42,26 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 
 	@Override
 	public void endApi() throws IOException {
-		write(def.toString());
+		//write(def.toString());
+		def.writeTo(getWriter(), WriterConfig.PRETTY_PRINT);
 	}
 
 	@Override
-	public void startClass(String name, String superclass,
+	public void startClass(String name, GMethod constructor, String superclass,
 			boolean objectLiteral, String description, String url)
 			throws IOException {
 		this.ternClass = getTernClass(name, def);
-		if (!StringUtils.isEmpty(superclass)) {
-			ternClass.set("!proto", superclass);
+		if (constructor != null) {			
+			String type = getType(constructor);
+			if (type != null) {
+				ternClass.add("!type", type);
+			}
 		}
 		addDocAndUrl(ternClass, description, url);
+		if (!StringUtils.isEmpty(superclass)) {
+			JsonObject prototype = getTernPrototype(ternClass);
+			prototype.set("!proto", superclass + ".prototype");
+		}		
 	}
 
 	protected void addDocAndUrl(JsonObject ternDef, String doc, String url) {
@@ -157,11 +166,7 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 		JsonObject ternClassOrPrototype = ternClass;
 		JsonObject jsonProperty = new JsonObject();
 		if (!property.isStatic()) {
-			JsonObject prototype = (JsonObject) ternClass.get("prototype");
-			if (prototype == null) {
-				prototype = new JsonObject();
-				ternClass.set("prototype", prototype);
-			}
+			JsonObject prototype = getTernPrototype(ternClass);
 			ternClassOrPrototype = prototype;
 		}
 		ternClassOrPrototype.set(property.getName(), jsonProperty);
@@ -180,14 +185,19 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 			ternClass.set(method.getName(), staticMethod);
 			return staticMethod;
 		}
+		JsonObject prototype = getTernPrototype(ternClass);
+		JsonObject prototypeMethod = new JsonObject();
+		prototype.set(method.getName(), prototypeMethod);
+		return prototypeMethod;
+	}
+
+	protected JsonObject getTernPrototype(JsonObject ternClass) {
 		JsonObject prototype = (JsonObject) ternClass.get("prototype");
 		if (prototype == null) {
 			prototype = new JsonObject();
 			ternClass.set("prototype", prototype);
 		}
-		JsonObject prototypeMethod = new JsonObject();
-		prototype.set(method.getName(), prototypeMethod);
-		return prototypeMethod;
+		return prototype;
 	}
 
 	@Override

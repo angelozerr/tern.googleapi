@@ -17,18 +17,31 @@ public class GMethod {
 
 	public GMethod(String signature, String description, String returnValue,
 			boolean constructor, boolean staticMethod, GClass ownerClass) {
-		this.description = description;
-		this.returnValue = returnValue;
+		this.description = description != null ? StringUtils
+				.normalizeSpace(description) : null;
 		this.constructor = constructor;
 		this.staticMethod = staticMethod;
 		this.parameters = new ArrayList<GParameter>();
 		// signature = Map(mapDiv:Node, opts?:MapOptions)
 		this.name = parseSignature(signature, parameters);
 		this.url = ownerClass != null ? ownerClass.getUrl() : null;
+		this.returnValue = getReturnValue(returnValue, constructor, ownerClass);
+	}
+
+	private String getReturnValue(String returnValue, boolean constructor,
+			GClass ownerClass) {
+		if (!constructor) {
+			return returnValue;
+		}
+		return ownerClass != null ? ownerClass.getName() : returnValue;
 	}
 
 	private String parseSignature(String signature, List<GParameter> parameters) {
+		signature = StringUtils.normalizeSpace(signature);
 		int index = signature.indexOf("(");
+		if (index == -1) {
+			return signature;
+		}
 		String name = signature.substring(0, index);
 		String parametersRegion = signature.substring(index + 1,
 				signature.length() - 1);

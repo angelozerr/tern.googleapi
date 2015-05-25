@@ -11,7 +11,7 @@ public interface IGApiHandler {
 
 	void endApi() throws IOException;
 
-	void startClass(String name, String superclass, boolean objectLiteral,
+	void startClass(String name, GMethod constructor, String superclass, boolean objectLiteral,
 			String description, String url) throws IOException;
 
 	void handleProperty(GProperty property) throws IOException;

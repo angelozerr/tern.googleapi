@@ -3,6 +3,8 @@ package tern.googleapi;
 import java.util.ArrayList;
 import java.util.List;
 
+import tern.googleapi.utils.StringUtils;
+
 public class GClass {
 
 	private final String className;
@@ -13,6 +15,7 @@ public class GClass {
 	private final String simpleName;
 	private final List<GProperty> properties;
 	private final List<GMethod> methods;
+	private GMethod constructor;
 
 	public GClass(String className, boolean objectLiteral, String baseUrl) {
 		this.className = className;
@@ -43,8 +46,16 @@ public class GClass {
 		return superClass;
 	}
 
+	public void setConstructor(GMethod method) {
+		this.constructor = method;
+	}
+
 	public void addMethod(GMethod method) {
-		methods.add(method);
+		this.methods.add(method);
+	}
+
+	public GMethod getConstructor() {
+		return constructor;
 	}
 
 	public List<GMethod> getMethods() {
@@ -67,6 +78,9 @@ public class GClass {
 		if (superClass != null) {
 			superClass = api.resolveType(superClass);
 		}
+		if (constructor != null) {
+			constructor.updateTypes(api);
+		}
 	}
 
 	public boolean isObjectLiteral() {
@@ -82,6 +96,7 @@ public class GClass {
 	}
 
 	public void setDescription(String description) {
-		this.description = description;
+		this.description = description != null ? StringUtils
+				.normalizeSpace(description) : null;
 	}
 }

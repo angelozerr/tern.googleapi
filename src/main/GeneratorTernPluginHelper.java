@@ -18,31 +18,34 @@ import tern.googleapi.handlers.TernDefGApiHandler;
 
 public class GeneratorTernPluginHelper {
 
-	public static String generate(String version, String baseUrl)
-			throws IOException, SAXException {
-		InputSource in = new InputSource(
-				GeneratorTernPluginHelper.class.getResourceAsStream("api"
-						+ version + ".html"));
+	public static String generate(String type, String version, String baseUrl,
+			Class clazz, boolean checkH2IdForClass) throws IOException,
+			SAXException {
+		InputSource in = new InputSource(clazz.getResourceAsStream("api"
+				+ version + ".html"));
 
 		StringWriter defs = new StringWriter();
-		GApi api = GApiHelper.load(in, "gmaps", version, baseUrl);
+		GApi api = GApiHelper.load(in, type, version, baseUrl,
+				checkH2IdForClass);
 		GApiHelper.visit(api, new TernDefGApiHandler(defs));
 
 		TernPluginGenerator generator = new TernPluginGenerator();
-		TernPluginOptions options = new TernPluginOptions("gmaps" + version,
+		TernPluginOptions options = new TernPluginOptions(type + version,
 				defs.toString());
 		return generator.generate(options);
 	}
 
-	public static void generatePackage(String version, String baseUrl)
+	public static void generatePackage(String type, String version,
+			String baseUrl, Class clazz, boolean checkH2IdForClass)
 			throws IOException, SAXException {
 		// Package folder
-		File packageFolder = new File("plugin/tern-gmaps" + version);
+		File packageFolder = new File("plugin/tern-" + type + version);
 		packageFolder.mkdirs();
 
 		// Tern plugin
-		String plugin = GeneratorTernPluginHelper.generate(version, baseUrl);
-		File pluginFile = new File(packageFolder, "gmaps" + version + ".js");
+		String plugin = GeneratorTernPluginHelper.generate(type, version,
+				baseUrl, clazz, checkH2IdForClass);
+		File pluginFile = new File(packageFolder, type + version + ".js");
 		Writer writer = new FileWriter(pluginFile);
 		try {
 			writer.write(plugin);
@@ -53,7 +56,7 @@ public class GeneratorTernPluginHelper {
 
 		// package.json
 		PackageGenerator generator = new PackageGenerator();
-		TernPluginOptions options = new TernPluginOptions("gmaps" + version, "");
+		TernPluginOptions options = new TernPluginOptions(type + version, "");
 		String packageContent = generator.generate(options);
 		File packageFile = new File(packageFolder, "package.json");
 		writer = new FileWriter(packageFile);

@@ -148,7 +148,7 @@
     var text = completion.name;
     var type = completion.type;
     var returnType = null;
-    if (startsWith(type, 'fn(')) {
+    if (type && startsWith(type, 'fn(')) {
       var bracket = 0;
       var afterStartFn = type.substring(2, type.length);
       var i = 0;

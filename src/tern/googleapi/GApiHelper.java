@@ -11,8 +11,9 @@ import tern.googleapi.handlers.IGApiHandler;
 
 public class GApiHelper {
 
-	public static GApi load(InputSource in, String name, String version, String baseUrl)
-			throws SAXException, IOException {
+	public static GApi load(InputSource in, String name, String version,
+			String baseUrl, boolean checkH2IdForClass) throws SAXException,
+			IOException {
 		SAXParser saxReader = new SAXParser();
 		// set the feature like explained in documentation :
 		// http://nekohtml.sourceforge.net/faq.html#fragments
@@ -20,7 +21,8 @@ public class GApiHelper {
 				.setFeature(
 						"http://cyberneko.org/html/features/balance-tags/document-fragment",
 						true);
-		GApiContentHandler handler = new GApiContentHandler(name, version, baseUrl);
+		GApiContentHandler handler = new GApiContentHandler(name, version,
+				baseUrl, checkH2IdForClass);
 		saxReader.setContentHandler(handler);
 		saxReader.parse(in);
 
@@ -33,8 +35,9 @@ public class GApiHelper {
 		List<GClass> classes = api.getClasses();
 		for (GClass clazz : classes) {
 			clazz.updateTypes(api);
-			visitor.startClass(clazz.getName(), clazz.getSuperclass(),
-					clazz.isObjectLiteral(), clazz.getDescription(), clazz.getUrl());
+			visitor.startClass(clazz.getName(), clazz.getConstructor(),
+					clazz.getSuperclass(), clazz.isObjectLiteral(),
+					clazz.getDescription(), clazz.getUrl());
 			// Loop for methods
 			List<GProperty> properties = clazz.getProperties();
 			for (GProperty property : properties) {

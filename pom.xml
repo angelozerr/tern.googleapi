@@ -34,13 +34,14 @@
 			<version>1.9.21</version>
 		</dependency>
 
+ 
+ <!--
 		<dependency>
-			<!-- OSGi bundle coming from Maven repo -->
-			<groupId>com.eclipsesource.minimal-json</groupId>
+				<groupId>com.eclipsesource.minimal-json</groupId>
 			<artifactId>minimal-json</artifactId>
 			<version>0.9.1</version>
 		</dependency>
-
+ -->
 	</dependencies>
 	
 </project>

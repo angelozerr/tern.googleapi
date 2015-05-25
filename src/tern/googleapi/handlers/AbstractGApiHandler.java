@@ -27,4 +27,7 @@ public abstract class AbstractGApiHandler implements IGApiHandler {
 		}
 	}
 
+	protected Writer getWriter() {
+		return writer;
+	}
 }

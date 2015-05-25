@@ -15,6 +15,7 @@ public class GApiContentHandler extends DefaultHandler {
 		NO_TRACK, TRACK_THIS_CLASS_EXTENDS, TRACK_SUPERCLASS
 	}
 
+	private final boolean checkH2IdForClass;
 	private final GApi api;
 	private GClass currentClass;
 	private StringBuilder h2Content;
@@ -28,10 +29,12 @@ public class GApiContentHandler extends DefaultHandler {
 	private StringBuilder tdContent;
 	private List<String> cells;
 
-	public GApiContentHandler(String name, String version, String baseUrl) {
+	public GApiContentHandler(String name, String version, String baseUrl,
+			boolean checkH2IdForClass) {
 		this.api = new GApi(name, version, baseUrl);
 		this.h2Content = null;
 		this.classParsing = false;
+		this.checkH2IdForClass = checkH2IdForClass;
 	}
 
 	@Override
@@ -42,7 +45,8 @@ public class GApiContentHandler extends DefaultHandler {
 			tableParsing = false;
 			tableType = null;
 			String id = attributes.getValue("id");
-			if (!StringUtils.isEmpty(id)) {
+			if (!checkH2IdForClass
+					|| (checkH2IdForClass && !StringUtils.isEmpty(id))) {
 				this.h2Content = new StringBuilder();
 				this.classParsing = true;
 			}
@@ -81,9 +85,16 @@ public class GApiContentHandler extends DefaultHandler {
 			throws SAXException {
 		if ("h2".equalsIgnoreCase(localName)) {
 			if (h2Content != null) {
-				String className = h2Content.toString().trim();
+				String className = StringUtils.normalizeSpace(h2Content
+						.toString());
 				int index = className.indexOf("\n");
 				if (index != -1) {
+					// ex : "google.maps.Map\nclass" for gmaps
+					className = className.substring(0, index);
+				}
+				index = className.indexOf(" ");
+				if (index != -1) {
+					// ex : "DataTable Class" for gcharts
 					className = className.substring(0, index);
 				}
 				if (!StringUtils.isEmpty(className)) {
@@ -108,13 +119,13 @@ public class GApiContentHandler extends DefaultHandler {
 					String description = cells.get(1);
 					GMethod method = new GMethod(type, description, null, true,
 							false, currentClass);
-					currentClass.addMethod(method);
+					currentClass.setConstructor(method);
 				} else if ("Methods".equalsIgnoreCase(tableType)
 						&& cells.size() == 3) {
-					String siganture = cells.get(0);
+					String signature = cells.get(0);
 					String returnValue = cells.get(1);
 					String description = cells.get(2);
-					GMethod method = new GMethod(siganture, description,
+					GMethod method = new GMethod(signature, description,
 							returnValue, false, false, currentClass);
 					currentClass.addMethod(method);
 				} else if ("Static Methods".equalsIgnoreCase(tableType)
