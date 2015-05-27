@@ -188,14 +188,21 @@ public class DOMUtils {
 	 * @return
 	 */
 	public static String getTextNodeAsString(Node parentNode) {
-		if (parentNode == null)
-			return null;
+		StringBuilder result = new StringBuilder();
+		getTextNodeAsString(parentNode, result);
+		return result.toString();
+	}
 
-		Node txt = getTextNode(parentNode);
-		if (txt == null)
-			return null;
-
-		return txt.getNodeValue();
+	private static void getTextNodeAsString(Node parentNode,
+			StringBuilder result) {
+		if (parentNode.getNodeType() == Node.TEXT_NODE) {
+			result.append(getTextContent((Text) parentNode, false));
+		} else {
+			NodeList childs = parentNode.getChildNodes();
+			for (int i = 0; i < childs.getLength(); i++) {
+				getTextNodeAsString(childs.item(i), result);
+			}
+		}
 	}
 
 	public static String getTextNodeAsStringInsideCode(Node parentNode) {
@@ -208,7 +215,7 @@ public class DOMUtils {
 
 		return txt.getNodeValue();
 	}
-	
+
 	/**
 	 * Returns the owner element of the node and null if not found.
 	 * 
@@ -230,4 +237,26 @@ public class DOMUtils {
 		return null;
 	}
 
+	public static Element getElement(Node node) {
+		if (node.getNodeType() == Node.ELEMENT_NODE) {
+			return (Element) node;
+		}
+		return null;
+	}
+
+	public static Element getNextSibling(Element h2) {
+		Node node = h2.getNextSibling();
+		while (node != null && node.getNodeType() != Node.ELEMENT_NODE) {
+			node = node.getNextSibling();
+		}
+		return getElement(node);
+	}
+
+	public static String getLastTextContent(Node node) {
+		Node lastChild = node.getLastChild();
+		if (lastChild != null && lastChild.getNodeType() == Node.TEXT_NODE) {
+			return DOMUtils.getTextContent((Text) lastChild);
+		}
+		return null;
+	}
 }

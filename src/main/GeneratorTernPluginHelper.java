@@ -18,15 +18,11 @@ import tern.googleapi.handlers.TernDefGApiHandler;
 
 public class GeneratorTernPluginHelper {
 
-	public static String generate(String type, String version, String baseUrl,
-			Class clazz, boolean checkH2IdForClass) throws IOException,
-			SAXException {
-		InputSource in = new InputSource(clazz.getResourceAsStream("api"
-				+ version + ".html"));
+	public static String generate(InputSource in, String type, String version,
+			String baseUrl, Class clazz) throws IOException, SAXException {
 
 		StringWriter defs = new StringWriter();
-		GApi api = GApiHelper.load(in, type, version, baseUrl,
-				checkH2IdForClass);
+		GApi api = GApiHelper.load(in, type, version, baseUrl);
 		GApiHelper.visit(api, new TernDefGApiHandler(defs));
 
 		TernPluginGenerator generator = new TernPluginGenerator();
@@ -35,16 +31,18 @@ public class GeneratorTernPluginHelper {
 		return generator.generate(options);
 	}
 
-	public static void generatePackage(String type, String version,
-			String baseUrl, Class clazz, boolean checkH2IdForClass)
-			throws IOException, SAXException {
+	public static void generatePackage(String type, String fileVersion,
+			String version, String baseUrl, Class clazz) throws IOException,
+			SAXException {
 		// Package folder
 		File packageFolder = new File("plugin/tern-" + type + version);
 		packageFolder.mkdirs();
 
 		// Tern plugin
-		String plugin = GeneratorTernPluginHelper.generate(type, version,
-				baseUrl, clazz, checkH2IdForClass);
+		InputSource in = new InputSource(clazz.getResourceAsStream("api"
+				+ fileVersion + ".html"));
+		String plugin = GeneratorTernPluginHelper.generate(in, type, version,
+				baseUrl, clazz);
 		File pluginFile = new File(packageFolder, type + version + ".js");
 		Writer writer = new FileWriter(pluginFile);
 		try {

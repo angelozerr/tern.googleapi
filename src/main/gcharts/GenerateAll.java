@@ -14,8 +14,9 @@ public class GenerateAll {
 				.generatePackage(
 						"gcharts",
 						"",
+						"",
 						"https://developers.google.com/chart/interactive/docs/reference",
-						GenerateAll.class, false);
-		
+						GenerateAll.class);
+
 	}
 }

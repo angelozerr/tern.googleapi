@@ -42,7 +42,7 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 
 	@Override
 	public void endApi() throws IOException {
-		//write(def.toString());
+		// write(def.toString());
 		def.writeTo(getWriter(), WriterConfig.PRETTY_PRINT);
 	}
 
@@ -50,8 +50,8 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 	public void startClass(String name, GMethod constructor, String superclass,
 			boolean objectLiteral, String description, String url)
 			throws IOException {
-		this.ternClass = getTernClass(name, def);
-		if (constructor != null) {			
+		this.ternClass = getTernClass(name, objectLiteral ? define : def);
+		if (constructor != null) {
 			String type = getType(constructor);
 			if (type != null) {
 				ternClass.add("!type", type);
@@ -61,7 +61,7 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 		if (!StringUtils.isEmpty(superclass)) {
 			JsonObject prototype = getTernPrototype(ternClass);
 			prototype.set("!proto", superclass + ".prototype");
-		}		
+		}
 	}
 
 	protected void addDocAndUrl(JsonObject ternDef, String doc, String url) {
@@ -143,6 +143,8 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 			returnValue = "?";
 		} else if ("*".equalsIgnoreCase(returnValue)) {
 			returnValue = "?";
+		} else if ("Function".equalsIgnoreCase(returnValue)) {
+			returnValue = "fn()";
 		} else {
 			simpleType = false;
 		}

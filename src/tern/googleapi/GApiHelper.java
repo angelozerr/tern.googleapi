@@ -8,25 +8,26 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import tern.googleapi.handlers.IGApiHandler;
+import tern.googleapi.loader.DOMGapiLoader;
 
 public class GApiHelper {
 
 	public static GApi load(InputSource in, String name, String version,
-			String baseUrl, boolean checkH2IdForClass) throws SAXException,
-			IOException {
-		SAXParser saxReader = new SAXParser();
-		// set the feature like explained in documentation :
-		// http://nekohtml.sourceforge.net/faq.html#fragments
-		saxReader
-				.setFeature(
-						"http://cyberneko.org/html/features/balance-tags/document-fragment",
-						true);
-		GApiContentHandler handler = new GApiContentHandler(name, version,
-				baseUrl, checkH2IdForClass);
-		saxReader.setContentHandler(handler);
-		saxReader.parse(in);
+			String baseUrl) throws SAXException, IOException {
 
-		return handler.getApi();
+		return new DOMGapiLoader().load(in, name, version, baseUrl);
+		/*
+		 * SAXParser saxReader = new SAXParser(); // set the feature like
+		 * explained in documentation : //
+		 * http://nekohtml.sourceforge.net/faq.html#fragments saxReader
+		 * .setFeature(
+		 * "http://cyberneko.org/html/features/balance-tags/document-fragment",
+		 * true); GApiContentHandler handler = new GApiContentHandler(name,
+		 * version, baseUrl, checkH2IdForClass);
+		 * saxReader.setContentHandler(handler); saxReader.parse(in);
+		 * 
+		 * return handler.getApi();
+		 */
 	}
 
 	public static void visit(GApi api, IGApiHandler visitor) throws IOException {
@@ -35,9 +36,10 @@ public class GApiHelper {
 		List<GClass> classes = api.getClasses();
 		for (GClass clazz : classes) {
 			clazz.updateTypes(api);
-			visitor.startClass(clazz.getName(), clazz.getConstructor(),
-					clazz.getSuperclass(), clazz.isObjectLiteral(),
-					clazz.getDescription(), clazz.getUrl());
+			visitor.startClass(clazz.isObjectLiteral() ? clazz.getSimpleName()
+					: clazz.getName(), clazz.getConstructor(), clazz
+					.getSuperclass(), clazz.isObjectLiteral(), clazz
+					.getDescription(), clazz.getUrl());
 			// Loop for methods
 			List<GProperty> properties = clazz.getProperties();
 			for (GProperty property : properties) {
