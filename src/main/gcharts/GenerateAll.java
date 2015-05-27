@@ -16,6 +16,7 @@ public class GenerateAll {
 						"",
 						"",
 						"https://developers.google.com/chart/interactive/docs/reference",
+						"gcharts.json",
 						GenerateAll.class);
 
 	}

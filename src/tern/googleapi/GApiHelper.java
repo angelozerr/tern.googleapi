@@ -39,18 +39,18 @@ public class GApiHelper {
 			visitor.startClass(clazz.isObjectLiteral() ? clazz.getSimpleName()
 					: clazz.getName(), clazz.getConstructor(), clazz
 					.getSuperclass(), clazz.isObjectLiteral(), clazz
-					.getDescription(), clazz.getUrl());
+					.getDescription(), clazz.getUrl(), api);
 			// Loop for methods
 			List<GProperty> properties = clazz.getProperties();
 			for (GProperty property : properties) {
 				property.updateType(api);
-				visitor.handleProperty(property);
+				visitor.handleProperty(property, api);
 			}
 			// Loop for methods
 			List<GMethod> methods = clazz.getMethods();
 			for (GMethod method : methods) {
 				method.updateTypes(api);
-				visitor.handleMethod(method);
+				visitor.handleMethod(method, api);
 			}
 			visitor.endClass();
 		}

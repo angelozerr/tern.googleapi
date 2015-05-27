@@ -62,7 +62,10 @@
     
     <h1>Demo with Google Maps 3.20 Tern plugin </h1>
 	<p>See <a href="https://github.com/angelozerr/tern.googleapi">https://github.com/angelozerr/tern.googleapi</a> for more infos.</p>  
-    <form><textarea id="code" name="code">var data = new google.visualization.DataTable();
+    <form><textarea id="code" name="code">new google.visualization. // here Ctrl+Space shows DataTable, etc
+new google.visualization.DataTable({ // here Ctrl+Space shows rows, cols
+
+var data = new google.visualization.DataTable();
 data.addColumn('string', 'Task');
 data.addColumn('number', 'Hours per Day');
 data.addRows([

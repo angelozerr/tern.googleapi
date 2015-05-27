@@ -42,10 +42,15 @@ public class GApi {
 		return classes;
 	}
 
-	public GClass addClass(String className, boolean objectLiteral) {
-		GClass clazz = new GClass(className, objectLiteral, baseUrl);
+	public GClass addClass(String className, boolean objectLiteral,
+			boolean namespace, String description) {
+		GClass clazz = new GClass(className, objectLiteral, namespace,
+				description, baseUrl);
 		classes.add(clazz);
-		mappings.put(clazz.getSimpleName(), clazz.isObjectLiteral() ? clazz.getSimpleName() : clazz.getName());
+		mappings.put(
+				clazz.getSimpleName(),
+				clazz.isObjectLiteral() ? clazz.getSimpleName() : clazz
+						.getName());
 		return clazz;
 	}
 

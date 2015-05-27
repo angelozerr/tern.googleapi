@@ -9,6 +9,7 @@ public class GClass {
 
 	private final String className;
 	private final boolean objectLiteral;
+	private final boolean namespace;
 	private String description;
 	private final String url;
 	private String superClass;
@@ -17,11 +18,14 @@ public class GClass {
 	private final List<GMethod> methods;
 	private GMethod constructor;
 
-	public GClass(String className, boolean objectLiteral, String baseUrl) {
+	public GClass(String className, boolean objectLiteral, boolean namespace,
+			String description, String baseUrl) {
 		this.className = className;
 		this.simpleName = getSimpleName(className);
 		this.url = GApi.getUrl(baseUrl, simpleName);
 		this.objectLiteral = objectLiteral;
+		this.namespace = namespace;
+		setDescription(description);
 		this.properties = new ArrayList<GProperty>();
 		this.methods = new ArrayList<GMethod>();
 	}
@@ -98,5 +102,9 @@ public class GClass {
 	public void setDescription(String description) {
 		this.description = description != null ? StringUtils
 				.normalizeSpace(description) : null;
+	}
+
+	public boolean isNamespace() {
+		return namespace;
 	}
 }

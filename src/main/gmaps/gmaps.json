@@ -1,0 +1,9 @@
+{
+  "google": {
+    "visualization": {
+      "DataTable": {
+        "!type": "fn()"
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "!define": {
+    "DataTableOptions": {
+      "cols": {
+      
+      },
+      "rows": {
+      
+      } 
+    }
+  },
+  "google": {
+    "visualization": {
+      "DataTable": {
+        "!type": "fn(opt_data?: +DataTableOptions, opt_version?: number) -> +google.visualization.DataTable"
+      }
+    }
+  }
+}

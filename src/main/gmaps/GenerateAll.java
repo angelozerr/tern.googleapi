@@ -17,7 +17,7 @@ public class GenerateAll {
 						"3.21",
 						"3.exp",
 						"https://developers.google.com/maps/documentation/javascript/3.exp/reference",
-						GenerateAll.class);
+						"gmaps.json", GenerateAll.class);
 		// https://developers.google.com/maps/documentation/javascript/reference
 		// => Release (3.20)
 		GeneratorTernPluginHelper
@@ -26,7 +26,7 @@ public class GenerateAll {
 						"3.20",
 						"3.ref",
 						"https://developers.google.com/maps/documentation/javascript/reference",
-						GenerateAll.class);
+						"gmaps.json", GenerateAll.class);
 		// https://developers.google.com/maps/documentation/javascript/3.19/reference
 		// => Frozen (3.19)
 		GeneratorTernPluginHelper
@@ -35,6 +35,6 @@ public class GenerateAll {
 						"3.19",
 						"3.frozen",
 						"https://developers.google.com/maps/documentation/javascript/3.19/reference",
-						GenerateAll.class);
+						"gmaps.json", GenerateAll.class);
 	}
 }

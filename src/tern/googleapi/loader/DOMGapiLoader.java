@@ -6,7 +6,6 @@ import java.util.List;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
 import tern.googleapi.GApi;
 import tern.googleapi.GClass;
@@ -61,6 +60,9 @@ public class DOMGapiLoader extends AbstractDOMGapiLoader {
 						}
 						parseTable(rows, clazz);
 					} else if ("p".equalsIgnoreCase(elt.getNodeName())) {
+						// check if p contains
+						// <p>This class extends <code><a
+						// href="#MVCObject">MVCObject</a></code>.</p>
 						String s = DOMUtils.getTextNodeAsString(elt);
 						if (s.startsWith("This class extends")) {
 							Element code = DOMUtils
@@ -70,21 +72,6 @@ public class DOMGapiLoader extends AbstractDOMGapiLoader {
 							String superClass = DOMUtils.getTextNodeAsString(a);
 							clazz.setSuperClass(superClass);
 						}
-						// check if p contains
-						// <p>This class extends <code><a
-						// href="#MVCObject">MVCObject</a></code>.</p>
-						/*
-						 * Node firstChild = elt.getFirstChild(); if (firstChild
-						 * != null && firstChild.getNodeType() ==
-						 * Node.TEXT_NODE) { if (DOMUtils .getTextContent((Text)
-						 * firstChild) .toLowerCase() .contains(
-						 * "This class extends".toLowerCase())) { Element a =
-						 * (Element
-						 * )firstChild.getNextSibling().getNextSibling(); String
-						 * extendsClass = DOMUtils.getTextNodeAsString(a);
-						 * 
-						 * } }
-						 */
 					}
 				}
 
@@ -108,10 +95,13 @@ public class DOMGapiLoader extends AbstractDOMGapiLoader {
 							.get(1));
 					GMethod method = new GMethod(type, description, null, true,
 							false, clazz);
+					clazz.setDescription(description);
 					clazz.setConstructor(method);
-				} else if (("Methods".equalsIgnoreCase(tableType) || "Static Methods"
-						.equalsIgnoreCase(tableType))) {
-					boolean staticMethod = "Static Methods".equals(tableType);
+				} else if (("Methods".equalsIgnoreCase(tableType)
+						|| "Method".equalsIgnoreCase(tableType) || "Static Methods"
+							.equalsIgnoreCase(tableType))) {
+					boolean staticMethod = clazz.isNamespace()
+							|| "Static Methods".equals(tableType);
 					String signature = DOMUtils.getTextNodeAsString(cells
 							.get(0));
 					String returnValue = null;
@@ -174,6 +164,7 @@ public class DOMGapiLoader extends AbstractDOMGapiLoader {
 	private GClass createClass(Element h2, GApi api) {
 		String className = null;
 		boolean objectLiteral = false;
+		boolean namespace = false;
 		String description = null;
 		Node enclosedNode = null;
 		NodeList spans = h2.getElementsByTagName("SPAN");
@@ -215,6 +206,7 @@ public class DOMGapiLoader extends AbstractDOMGapiLoader {
 				String s = DOMUtils.getLastTextContent(enclosedNode);
 				if (!StringUtils.isEmpty(s)) {
 					objectLiteral = s.contains("object specification");
+					namespace = s.contains("namespace");
 				}
 
 				Element p = DOMUtils.getNextSibling((Element) enclosedNode);
@@ -240,8 +232,8 @@ public class DOMGapiLoader extends AbstractDOMGapiLoader {
 			}
 		}
 		if (!StringUtils.isEmpty(className)) {
-			GClass clazz = api.addClass(className, objectLiteral);
-			clazz.setDescription(description);
+			GClass clazz = api.addClass(className, objectLiteral, namespace,
+					description);
 			return clazz;
 		}
 		return null;

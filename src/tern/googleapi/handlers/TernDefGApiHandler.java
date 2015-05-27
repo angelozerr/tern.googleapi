@@ -1,11 +1,11 @@
 package tern.googleapi.handlers;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Writer;
 import java.util.List;
 
 import tern.googleapi.FunctionType;
+import tern.googleapi.GApi;
 import tern.googleapi.GMethod;
 import tern.googleapi.GParameter;
 import tern.googleapi.GProperty;
@@ -20,23 +20,31 @@ import com.eclipsesource.json.WriterConfig;
 public class TernDefGApiHandler extends AbstractGApiHandler {
 
 	private final JsonObject def;
+	private final JsonObject overridedDef;
 	private JsonObject ternClass;
 	private JsonObject define;
 
-	public TernDefGApiHandler(OutputStream out) {
-		super(out);
-		this.def = new JsonObject();
+	public TernDefGApiHandler(Writer writer) {
+		this(writer, null);
 	}
 
-	public TernDefGApiHandler(Writer writer) {
+	public TernDefGApiHandler(Writer writer, JsonObject overridedDef) {
 		super(writer);
 		this.def = new JsonObject();
+		this.overridedDef = overridedDef;
 	}
 
 	@Override
 	public void startApi(String name, String version) throws IOException {
 		def.set("!name", name + version);
-		this.define = new JsonObject();
+		JsonObject define = null;
+		if (overridedDef != null) {
+			define = (JsonObject) overridedDef.get("!define");
+		}
+		if (define == null) {
+			define = new JsonObject();
+		}
+		this.define = define;
 		def.set("!define", define);
 	}
 
@@ -48,20 +56,36 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 
 	@Override
 	public void startClass(String name, GMethod constructor, String superclass,
-			boolean objectLiteral, String description, String url)
+			boolean objectLiteral, String description, String url, GApi api)
 			throws IOException {
 		this.ternClass = getTernClass(name, objectLiteral ? define : def);
-		if (constructor != null) {
-			String type = getType(constructor);
-			if (type != null) {
-				ternClass.add("!type", type);
-			}
+		String type = getOverridedType(name);
+		if (StringUtils.isEmpty(type) && constructor != null) {
+			type = getType(constructor, api);
+		}
+		if (!StringUtils.isEmpty(type)) {
+			ternClass.add("!type", type);
 		}
 		addDocAndUrl(ternClass, description, url);
 		if (!StringUtils.isEmpty(superclass)) {
 			JsonObject prototype = getTernPrototype(ternClass);
 			prototype.set("!proto", superclass + ".prototype");
 		}
+	}
+
+	private String getOverridedType(String name) {
+		if (overridedDef == null) {
+			return null;
+		}
+		JsonObject parent = overridedDef;
+		String[] fields = name.split("[.]");
+		for (int i = 0; i < fields.length && parent != null; i++) {
+			parent = (JsonObject) parent.get(fields[i]);
+		}
+		if (parent != null) {
+			return parent.getString("!type", null);
+		}
+		return null;
 	}
 
 	protected void addDocAndUrl(JsonObject ternDef, String doc, String url) {
@@ -74,18 +98,18 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 	}
 
 	@Override
-	public void handleProperty(GProperty property) throws IOException {
+	public void handleProperty(GProperty property, GApi api) throws IOException {
 		JsonObject jsonProperty = getTernClassOrPrototype(ternClass, property);
-		jsonProperty.set("!type", getType(property.getType(), false));
+		jsonProperty.set("!type", getType(property.getType(), false, api));
 		String doc = property.getDescription();
 		String url = property.getUrl();
 		addDocAndUrl(jsonProperty, doc, url);
 	}
 
 	@Override
-	public void handleMethod(GMethod method) {
+	public void handleMethod(GMethod method, GApi api) {
 		JsonObject ternItem = getTernClassOrPrototype(ternClass, method);
-		String type = getType(method);
+		String type = getType(method, api);
 		if (!StringUtils.isEmpty(type)) {
 			ternItem.set("!type", type);
 		}
@@ -94,7 +118,7 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 		addDocAndUrl(ternItem, doc, url);
 	}
 
-	private String getType(GMethod method) {
+	private String getType(GMethod method, GApi api) {
 		StringBuilder type = new StringBuilder("fn(");
 		List<GParameter> parameters = method.getParameters();
 		for (int i = 0; i < parameters.size(); i++) {
@@ -107,31 +131,34 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 				type.append("?");
 			}
 			type.append(": ");
-			type.append(getType(parameter.getType(), false));
+			type.append(getType(parameter.getType(), false, api));
 
 		}
 		type.append(")");
 		if (method.hasReturnValue()) {
 			String returnValue = method.getReturnValue();
 			type.append(" -> ");
-			type.append(getType(returnValue, true));
+			type.append(getType(returnValue, true, api));
 		}
 		return type.toString();
 	}
 
-	private String getType(IType type, boolean returnType) {
+	private String getType(IType type, boolean returnType, GApi api) {
 		if (type instanceof SimpleType) {
-			return getType(((SimpleType) type).getType(), returnType);
+			return getType(((SimpleType) type).getType(), returnType, api);
 		}
-		return getType((FunctionType) type);
+		return getType((FunctionType) type, api);
 	}
 
-	private String getType(String returnValue, boolean returnType) {
+	private String getType(String returnValue, boolean returnType, GApi api) {
 		boolean array = false, simpleType = true;
-		if (returnValue.startsWith("Array.<")) {
-			returnValue = returnValue.substring("Array.<".length(),
+		if (returnValue.startsWith("Array<")) {
+			returnValue = returnValue.substring("Array<".length(),
 					returnValue.length() - 1);
 			array = true;
+		}
+		if (returnValue.startsWith("MVCArray")) {
+			returnValue = "MVCArray";
 		}
 		if ("string".equalsIgnoreCase(returnValue)) {
 			returnValue = "string";
@@ -143,6 +170,9 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 			returnValue = "?";
 		} else if ("*".equalsIgnoreCase(returnValue)) {
 			returnValue = "?";
+		} else if ("Array".equalsIgnoreCase(returnValue)) {
+			returnValue = "?";
+			array = true;
 		} else if ("Function".equalsIgnoreCase(returnValue)) {
 			returnValue = "fn()";
 		} else {
@@ -155,8 +185,10 @@ public class TernDefGApiHandler extends AbstractGApiHandler {
 		}
 		if (!simpleType) {
 			type.append("+");
+			type.append(api.resolveType(returnValue));
+		} else {
+			type.append(returnValue);
 		}
-		type.append(returnValue);
 		if (array) {
 			type.append("]");
 		}

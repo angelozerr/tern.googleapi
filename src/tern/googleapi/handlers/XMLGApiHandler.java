@@ -3,6 +3,7 @@ package tern.googleapi.handlers;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import tern.googleapi.GApi;
 import tern.googleapi.GMethod;
 import tern.googleapi.GParameter;
 import tern.googleapi.GProperty;
@@ -30,7 +31,7 @@ public class XMLGApiHandler extends AbstractGApiHandler {
 
 	@Override
 	public void startClass(String name, GMethod constructor, String superclass,
-			boolean objectLiteral, String description, String url)
+			boolean objectLiteral, String description, String url, GApi api)
 			throws IOException {
 		startElement("class");
 		setAttribute("type", name);
@@ -78,12 +79,12 @@ public class XMLGApiHandler extends AbstractGApiHandler {
 	}
 
 	@Override
-	public void handleProperty(GProperty property) throws IOException {
+	public void handleProperty(GProperty property, GApi api) throws IOException {
 
 	}
 
 	@Override
-	public void handleMethod(GMethod method) throws IOException {
+	public void handleMethod(GMethod method, GApi api) throws IOException {
 		if (method.isConstructor()) {
 			startElement("constructors", true);
 			startElement("constructor", true);
